@@ -1,0 +1,722 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gran Rifa Express - $50 en Efectivo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos personalizados para animaciones y estados de boletos */
+        .ticket-number {
+            transition: all 0.2s ease-in-out;
+        }
+        .ticket-number:hover:not(.disabled-ticket) {
+            transform: translateY(-2px);
+        }
+        .ticket-available {
+            background-color: #ffffff;
+            border-color: #10b981;
+            color: #047857;
+        }
+        .ticket-available:hover {
+            background-color: #ecfdf5;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+        }
+        .ticket-pending {
+            background-color: #fef3c7;
+            border-color: #f59e0b;
+            color: #b45309;
+            position: relative;
+        }
+        .ticket-sold {
+            background-color: #f3f4f6;
+            border-color: #9ca3af;
+            color: #9ca3af;
+            text-decoration: line-through;
+            opacity: 0.75;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col">
+
+    <!-- Header Navbar -->
+    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-500 text-slate-900 p-2.5 rounded-xl font-bold shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-ticket text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg sm:text-xl tracking-tight text-white">Rifa Express</h1>
+                    <p class="text-xs text-amber-400 font-medium">¡Participa y Gana!</p>
+                </div>
+            </div>
+
+            <!-- Botón de Administración -->
+            <button id="adminAuthBtn" onclick="openAdminModal()" class="flex items-center space-x-2 bg-slate-700/80 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl border border-slate-600 transition text-sm font-semibold shadow-sm">
+                <i class="fa-solid fa-lock text-amber-400" id="lockIcon"></i>
+                <span id="adminBtnText" class="hidden sm:inline">Admin</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6 space-y-8">
+
+        <!-- Banner Principal de Premio -->
+        <section class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 p-6 sm:p-8 text-slate-950 shadow-2xl shadow-amber-500/10">
+            <div class="absolute -right-10 -bottom-10 opacity-15 text-slate-900 pointer-events-none">
+                <i class="fa-solid fa-trophy text-[16rem]"></i>
+            </div>
+            
+            <div class="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+                <div class="space-y-3">
+                    <span class="inline-block bg-slate-950/20 backdrop-blur-sm text-slate-950 text-xs uppercase font-extrabold px-3 py-1 rounded-full tracking-wider">
+                        ⭐ Gran Sorteo Especial ⭐
+                    </span>
+                    <h2 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+                        ¡Gana <span class="text-white drop-shadow-md">$50 USD</span> en Efectivo!
+                    </h2>
+                    <p class="text-slate-900/90 font-medium text-sm sm:text-base max-w-xl">
+                        Compra tu ticket por solo <strong class="text-white font-extrabold">2.500 Bs</strong>. Selecciona tus números de la suerte, realiza tu pago móvil y registra tu compra.
+                    </p>
+                </div>
+
+                <div class="bg-slate-950/90 text-white p-5 rounded-2xl border border-white/10 shadow-xl min-w-[220px] text-center backdrop-blur-md">
+                    <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Precio por ticket</div>
+                    <div class="text-3xl font-black text-amber-400">2.500 Bs</div>
+                    <div class="mt-2 text-xs text-slate-300 bg-slate-800/80 py-1.5 px-3 rounded-lg border border-slate-700/50">
+                        Premio: <strong class="text-emerald-400">$50 USD Cash</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Información de Pago Móvil -->
+        <section class="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-5 sm:p-6 shadow-xl backdrop-blur-sm">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-mobile-screen-button text-amber-400"></i>
+                Datos para el Pago Móvil
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Banco de Venezuela -->
+                <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-xl relative group">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-blue-600 text-white font-black text-xs px-2.5 py-1 rounded-md">0102</span>
+                            <span class="font-bold text-slate-200">Banco de Venezuela (BDV)</span>
+                        </div>
+                        <button onclick="copyPaymentData('0102', '28308252', '04262884841')" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 px-2.5 py-1 rounded-lg transition flex items-center gap-1 font-semibold">
+                            <i class="fa-regular fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                    <div class="space-y-1 text-sm text-slate-300 font-mono">
+                        <p class="flex justify-between border-b border-slate-800 pb-1">
+                            <span class="text-slate-400 font-sans">C.I:</span>
+                            <strong class="text-white">V-28308252</strong>
+                        </p>
+                        <p class="flex justify-between pt-1">
+                            <span class="text-slate-400 font-sans">Teléfono:</span>
+                            <strong class="text-white">0426-2884841</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Banco Nacional de Crédito -->
+                <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-xl relative group">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-emerald-600 text-white font-black text-xs px-2.5 py-1 rounded-md">0191</span>
+                            <span class="font-bold text-slate-200">Banco Nacional de Crédito (BNC)</span>
+                        </div>
+                        <button onclick="copyPaymentData('0191', '28308252', '04262884841')" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 px-2.5 py-1 rounded-lg transition flex items-center gap-1 font-semibold">
+                            <i class="fa-regular fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                    <div class="space-y-1 text-sm text-slate-300 font-mono">
+                        <p class="flex justify-between border-b border-slate-800 pb-1">
+                            <span class="text-slate-400 font-sans">C.I:</span>
+                            <strong class="text-white">V-28308252</strong>
+                        </p>
+                        <p class="flex justify-between pt-1">
+                            <span class="text-slate-400 font-sans">Teléfono:</span>
+                            <strong class="text-white">0426-2884841</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leyenda y Métricas -->
+        <section class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-800/40 p-4 rounded-xl border border-slate-700/50">
+            <!-- Contadores -->
+            <div class="flex items-center space-x-6 text-sm">
+                <div>
+                    <span class="text-slate-400 block text-xs">Total Boletos</span>
+                    <span class="text-xl font-bold text-white">100</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-xs">Disponibles</span>
+                    <span id="statAvailable" class="text-xl font-bold text-emerald-400">0</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-xs">Pendientes</span>
+                    <span id="statPending" class="text-xl font-bold text-amber-400">0</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-xs">Vendidos</span>
+                    <span id="statSold" class="text-xl font-bold text-rose-400">0</span>
+                </div>
+            </div>
+
+            <!-- Leyenda de colores -->
+            <div class="flex items-center space-x-4 text-xs font-semibold">
+                <div class="flex items-center space-x-1.5">
+                    <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 border border-emerald-400 inline-block"></span>
+                    <span class="text-slate-300">Disponible</span>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                    <span class="w-3.5 h-3.5 rounded-full bg-amber-500 border border-amber-400 inline-block"></span>
+                    <span class="text-slate-300">Pendiente</span>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                    <span class="w-3.5 h-3.5 rounded-full bg-slate-600 border border-slate-500 inline-block"></span>
+                    <span class="text-slate-400">Vendido</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cuadrícula de Números -->
+        <section class="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-5 sm:p-6 shadow-xl backdrop-blur-sm space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-table-cells text-amber-400"></i>
+                    Selecciona tu Número (00 - 99)
+                </h3>
+                <span class="text-xs text-slate-400 font-medium">Haz clic en un número verde para comprar</span>
+            </div>
+
+            <div id="ticketsGrid" class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3">
+                <!-- Se genera dinámicamente con JS -->
+            </div>
+        </section>
+
+        <!-- PANEL DE ADMINISTRACIÓN (SOLO VISIBLE CUANDO ADMIN ESTÁ AUTENTICADO) -->
+        <section id="adminPanelSection" class="hidden bg-slate-800 border-2 border-amber-500/50 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-700 pb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-amber-500/20 text-amber-400 p-2 rounded-xl">
+                        <i class="fa-solid fa-user-shield text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Panel de Control del Administrador</h3>
+                        <p class="text-xs text-slate-400">Gestiona compras, aprueba referencias o libera boletos</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetRaffle()" class="px-3 py-1.5 bg-rose-900/40 hover:bg-rose-900/70 border border-rose-700/60 text-rose-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate text-rose-400"></i> Reiniciar Rifa
+                    </button>
+                    <button onclick="logoutAdmin()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-from-bracket"></i> Salir Admin
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla de Compradores y Registro -->
+            <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/60">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900 text-xs text-slate-400 uppercase tracking-wider border-b border-slate-700">
+                        <tr>
+                            <th class="px-4 py-3">N° Boleto</th>
+                            <th class="px-4 py-3">Cliente</th>
+                            <th class="px-4 py-3">Teléfono</th>
+                            <th class="px-4 py-3">Banco Origen / Destino</th>
+                            <th class="px-4 py-3">N° Referencia</th>
+                            <th class="px-4 py-3">Estado</th>
+                            <th class="px-4 py-3 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody" class="divide-y divide-slate-800">
+                        <!-- Generado por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Formulario de Compra -->
+    <div id="buyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative space-y-5 animate-fade-in">
+            <button onclick="closeBuyModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <div class="flex items-center space-x-3 border-b border-slate-700 pb-3">
+                <div class="bg-emerald-500/20 text-emerald-400 p-2.5 rounded-xl">
+                    <i class="fa-solid fa-ticket text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-lg">Comprar Ticket N° <span id="modalTicketNum" class="text-amber-400 text-xl font-extrabold">00</span></h3>
+                    <p class="text-xs text-slate-400">Monto a pagar: <strong class="text-emerald-400 font-bold">2.500 Bs</strong></p>
+                </div>
+            </div>
+
+            <form id="purchaseForm" onsubmit="submitPurchase(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre Completo *</label>
+                    <input type="text" id="custName" required placeholder="Ej: Pedro Pérez" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Número de Teléfono *</label>
+                    <input type="tel" id="custPhone" required placeholder="Ej: 0412-1234567" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Banco Emisor *</label>
+                        <input type="text" id="custBankOrigin" required placeholder="Ej: Banesco, Mercantil" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Banco Destino *</label>
+                        <select id="custBankDest" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                            <option value="BDV (0102)">BDV (0102)</option>
+                            <option value="BNC (0191)">BNC (0191)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">N° Referencia del Pago Móvil *</label>
+                    <input type="text" id="custRef" required placeholder="Ej: 123456" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeBuyModal()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="w-1/2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-2.5 rounded-xl text-sm shadow-lg shadow-amber-500/20 transition">
+                        Enviar Pago
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Autenticación Administrador -->
+    <div id="adminModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative space-y-4">
+            <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto text-xl">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h3 class="font-bold text-white text-lg">Acceso Administrador</h3>
+                <p class="text-xs text-slate-400">Introduce la contraseña para continuar</p>
+            </div>
+
+            <form onsubmit="verifyAdminPass(event)" class="space-y-4">
+                <div>
+                    <input type="password" id="adminPasswordInput" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white text-center focus:outline-none focus:border-amber-500 transition">
+                </div>
+
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-2.5 rounded-xl text-sm shadow-lg shadow-amber-500/20 transition">
+                    Ingresar al Panel
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast de Notificación Custom -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-xs bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 animate-bounce">
+        <div id="toastIcon" class="text-emerald-400 text-lg">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div id="toastMessage" class="text-xs font-semibold">
+            Notificación
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-6xl mx-auto px-4">
+            <p>© 2026 Sistema de Rifas Express. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Principal -->
+    <script>
+        // Clave del Administrador
+        const ADMIN_KEY = "Lapiz33$";
+        let isAdminLoggedIn = false;
+        let selectedTicketForBuy = null;
+
+        // Estructura de boletos (00 al 99)
+        // Cada ticket: { number: "00", status: "available" | "pending" | "sold", buyer: { name, phone, bankOrigin, bankDest, ref, date } }
+        let raffleTickets = {};
+
+        // Inicialización
+        window.addEventListener('DOMContentLoaded', () => {
+            initRaffleData();
+            renderGrid();
+            updateStats();
+        });
+
+        // Inicializar datos en localStorage
+        function initRaffleData() {
+            const stored = localStorage.getItem('rifa_express_data');
+            if (stored) {
+                try {
+                    raffleTickets = JSON.parse(stored);
+                } catch (e) {
+                    generateEmptyTickets();
+                }
+            } else {
+                generateEmptyTickets();
+            }
+        }
+
+        function generateEmptyTickets() {
+            raffleTickets = {};
+            for (let i = 0; i < 100; i++) {
+                const numStr = i < 10 ? '0' + i : '' + i;
+                raffleTickets[numStr] = {
+                    number: numStr,
+                    status: 'available',
+                    buyer: null
+                };
+            }
+            saveData();
+        }
+
+        function saveData() {
+            localStorage.setItem('rifa_express_data', JSON.stringify(raffleTickets));
+        }
+
+        // Renderizar Cuadrícula
+        function renderGrid() {
+            const grid = document.getElementById('ticketsGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 100; i++) {
+                const numStr = i < 10 ? '0' + i : '' + i;
+                const ticket = raffleTickets[numStr];
+
+                const btn = document.createElement('button');
+                btn.className = `ticket-number h-12 rounded-xl font-black text-sm flex flex-col items-center justify-center border shadow-sm transition relative overflow-hidden`;
+
+                if (ticket.status === 'available') {
+                    btn.classList.add('ticket-available');
+                    btn.innerHTML = `<span>${numStr}</span>`;
+                    btn.onclick = () => openBuyModal(numStr);
+                } else if (ticket.status === 'pending') {
+                    btn.classList.add('ticket-pending', 'disabled-ticket');
+                    btn.innerHTML = `
+                        <span>${numStr}</span>
+                        <span class="text-[9px] font-bold uppercase tracking-tighter text-amber-700 leading-none">Reservado</span>
+                    `;
+                    btn.title = "Número pendiente de verificación de pago";
+                } else if (ticket.status === 'sold') {
+                    btn.classList.add('ticket-sold', 'disabled-ticket');
+                    btn.innerHTML = `
+                        <span>${numStr}</span>
+                        <span class="text-[8px] font-bold uppercase tracking-tighter text-slate-500 leading-none">Vendido</span>
+                    `;
+                    btn.title = "Número comprado y verificado";
+                }
+
+                grid.appendChild(btn);
+            }
+
+            if (isAdminLoggedIn) {
+                renderAdminTable();
+            }
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            let available = 0;
+            let pending = 0;
+            let sold = 0;
+
+            Object.values(raffleTickets).forEach(t => {
+                if (t.status === 'available') available++;
+                if (t.status === 'pending') pending++;
+                if (t.status === 'sold') sold++;
+            });
+
+            document.getElementById('statAvailable').textContent = available;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statSold').textContent = sold;
+        }
+
+        // Abrir Modal de Compra
+        function openBuyModal(numStr) {
+            selectedTicketForBuy = numStr;
+            document.getElementById('modalTicketNum').textContent = numStr;
+            document.getElementById('purchaseForm').reset();
+            document.getElementById('buyModal').classList.remove('hidden');
+        }
+
+        function closeBuyModal() {
+            document.getElementById('buyModal').classList.add('hidden');
+            selectedTicketForBuy = null;
+        }
+
+        // Enviar Formulario de Compra
+        function submitPurchase(e) {
+            e.preventDefault();
+            if (!selectedTicketForBuy) return;
+
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const bankOrigin = document.getElementById('custBankOrigin').value.trim();
+            const bankDest = document.getElementById('custBankDest').value;
+            const ref = document.getElementById('custRef').value.trim();
+
+            if (!name || !phone || !bankOrigin || !ref) {
+                showToast('Por favor completa todos los campos requeridos', 'error');
+                return;
+            }
+
+            // Actualizar boleto a PENDIENTE
+            raffleTickets[selectedTicketForBuy].status = 'pending';
+            raffleTickets[selectedTicketForBuy].buyer = {
+                name,
+                phone,
+                bankOrigin,
+                bankDest,
+                ref,
+                date: new Date().toLocaleString('es-VE')
+            };
+
+            saveData();
+            renderGrid();
+            updateStats();
+            closeBuyModal();
+
+            showToast(`¡Boleto ${selectedTicketForBuy} reservado! El administrador verificará tu pago.`);
+        }
+
+        // Modal de Admin Auth
+        function openAdminModal() {
+            if (isAdminLoggedIn) {
+                showAdminPanel();
+                return;
+            }
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('adminModal').classList.remove('hidden');
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.add('hidden');
+        }
+
+        function verifyAdminPass(e) {
+            e.preventDefault();
+            const pass = document.getElementById('adminPasswordInput').value;
+
+            if (pass === ADMIN_KEY) {
+                isAdminLoggedIn = true;
+                closeAdminModal();
+                showAdminPanel();
+                showToast('Acceso de Administrador concedido');
+            } else {
+                showToast('Contraseña incorrecta', 'error');
+            }
+        }
+
+        function showAdminPanel() {
+            document.getElementById('adminPanelSection').classList.remove('hidden');
+            document.getElementById('lockIcon').className = 'fa-solid fa-lock-open text-emerald-400';
+            document.getElementById('adminBtnText').textContent = 'Panel Admin (Activo)';
+            renderAdminTable();
+            // Scroll suave hacia el panel admin
+            document.getElementById('adminPanelSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            document.getElementById('adminPanelSection').classList.add('hidden');
+            document.getElementById('lockIcon').className = 'fa-solid fa-lock text-amber-400';
+            document.getElementById('adminBtnText').textContent = 'Admin';
+            showToast('Sesión de administración cerrada');
+        }
+
+        // Renderizar tabla del panel de administración
+        function renderAdminTable() {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = '';
+
+            const activeTickets = Object.values(raffleTickets).filter(t => t.status !== 'available');
+
+            if (activeTickets.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-6 text-slate-500 text-xs">
+                            No hay compras ni reservas registradas hasta el momento.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Mostrar tickets pendientes primero
+            activeTickets.sort((a, b) => (a.status === 'pending' ? -1 : 1));
+
+            activeTickets.forEach(ticket => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/50 transition";
+
+                const isPending = ticket.status === 'pending';
+                const statusBadge = isPending 
+                    ? `<span class="px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-bold rounded-lg">PENDIENTE</span>`
+                    : `<span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg">VENDIDO</span>`;
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-extrabold text-amber-400">N° ${ticket.number}</td>
+                    <td class="px-4 py-3 font-semibold text-white">${ticket.buyer ? ticket.buyer.name : '-'}</td>
+                    <td class="px-4 py-3 text-slate-300 font-mono text-xs">${ticket.buyer ? ticket.buyer.phone : '-'}</td>
+                    <td class="px-4 py-3 text-slate-300 text-xs">
+                        <div><strong>Origen:</strong> ${ticket.buyer ? ticket.buyer.bankOrigin : '-'}</div>
+                        <div class="text-slate-400"><strong>Destino:</strong> ${ticket.buyer ? ticket.buyer.bankDest : '-'}</div>
+                    </td>
+                    <td class="px-4 py-3 font-mono font-bold text-white text-xs">${ticket.buyer ? ticket.buyer.ref : '-'}</td>
+                    <td class="px-4 py-3">${statusBadge}</td>
+                    <td class="px-4 py-3 text-center space-x-1">
+                        ${isPending ? `
+                            <button onclick="approvePayment('${ticket.number}')" title="Aprobar Pago" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition">
+                                <i class="fa-solid fa-check"></i> Aprobar
+                            </button>
+                        ` : ''}
+                        <button onclick="releaseTicket('${ticket.number}')" title="Liberar Boleto / Rechazar" class="px-2.5 py-1.5 bg-rose-600/80 hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-trash-can"></i> Liberar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Acciones del Admin: Aprobar Pago
+        function approvePayment(numStr) {
+            if (raffleTickets[numStr]) {
+                raffleTickets[numStr].status = 'sold';
+                saveData();
+                renderGrid();
+                updateStats();
+                showToast(`Pago aprobado para el número ${numStr}. Boleto Vendido.`);
+            }
+        }
+
+        // Acciones del Admin: Liberar / Rechazar Boleto
+        function releaseTicket(numStr) {
+            if (raffleTickets[numStr]) {
+                raffleTickets[numStr].status = 'available';
+                raffleTickets[numStr].buyer = null;
+                saveData();
+                renderGrid();
+                updateStats();
+                showToast(`Número ${numStr} liberado y disponible nuevamente.`, 'warning');
+            }
+        }
+
+        // Reiniciar Rifa Completa
+        function resetRaffle() {
+            if (confirm("¿Estás seguro de que deseas reiniciar toda la rifa? Se borrarán todas las reservas y ventas.")) {
+                generateEmptyTickets();
+                renderGrid();
+                updateStats();
+                showToast('La rifa ha sido reiniciada por completo.', 'warning');
+            }
+        }
+
+        // Función para copiar datos de pago
+        function copyPaymentData(bankCode, id, phone) {
+            const text = `Pago Móvil ${bankCode}\nCI: ${id}\nTeléfono: ${phone}`;
+            
+            // Método compatible para iframe / clipboard
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            showToast('Datos de Pago Móvil copiados al portapapeles');
+        }
+
+        // Toast de Notificación
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.textContent = message;
+
+            if (type === 'error') {
+                toastIcon.className = 'text-rose-400 text-lg';
+                toastIcon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+            } else if (type === 'warning') {
+                toastIcon.className = 'text-amber-400 text-lg';
+                toastIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else {
+                toastIcon.className = 'text-emerald-400 text-lg';
+                toastIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
+```
